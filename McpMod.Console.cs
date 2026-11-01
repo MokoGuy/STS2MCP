@@ -42,11 +42,18 @@ public static partial class McpMod
 
     // Starts a custom-mode run with a fixed seed from the open "Mode personnalise" screen, so test runs
     // are reproducible. Character: whatever is selected (Ironclad by default).
-    private static Dictionary<string, object?> ExecuteCustomEmbark(string seed)
+    private static Dictionary<string, object?> ExecuteCustomEmbark(string seed, string character = "")
     {
         var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
         var screen = FindFirst<NCustomRunScreen>(tree.Root);
         if (screen == null || screen.Lobby == null) return Error("Custom run screen is not open");
+        if (!string.IsNullOrWhiteSpace(character))
+        {
+            var model = System.Linq.Enumerable.FirstOrDefault(MegaCrit.Sts2.Core.Models.ModelDb.AllCharacters,
+                c => string.Equals(c.Id.Entry, character.Trim(), System.StringComparison.OrdinalIgnoreCase));
+            if (model == null) return Error($"Unknown character '{character}'");
+            screen.Lobby.SetLocalCharacter(model);
+        }
         if (!string.IsNullOrWhiteSpace(seed)) screen.Lobby.SetSeed(seed.Trim().ToUpperInvariant()); // host only
         var embark = typeof(NCustomRunScreen).GetMethod("OnEmbarkPressed", BindingFlags.Instance | BindingFlags.NonPublic);
         if (embark == null) return Error("OnEmbarkPressed not found (game changed?)");
