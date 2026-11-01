@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using MegaCrit.Sts2.Core.DevConsole;
 using MegaCrit.Sts2.Core.Nodes.Debug;
+using MegaCrit.Sts2.Core.Nodes.Screens.CustomRun;
 
 namespace STS2_MCP;
 
@@ -37,5 +38,19 @@ public static partial class McpMod
             ["status"] = result.success ? "ok" : "error",
             ["msg"] = result.msg
         };
+    }
+
+    // Starts a custom-mode run with a fixed seed from the open "Mode personnalise" screen, so test runs
+    // are reproducible. Character: whatever is selected (Ironclad by default).
+    private static Dictionary<string, object?> ExecuteCustomEmbark(string seed)
+    {
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        var screen = FindFirst<NCustomRunScreen>(tree.Root);
+        if (screen == null || screen.Lobby == null) return Error("Custom run screen is not open");
+        screen.Lobby.SetSeed(string.IsNullOrWhiteSpace(seed) ? null : seed.Trim().ToUpperInvariant());
+        var embark = typeof(NCustomRunScreen).GetMethod("OnEmbarkPressed", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (embark == null) return Error("OnEmbarkPressed not found (game changed?)");
+        embark.Invoke(screen, new object?[] { null });
+        return new Dictionary<string, object?> { ["status"] = "ok", ["seed"] = screen.Lobby.Seed };
     }
 }

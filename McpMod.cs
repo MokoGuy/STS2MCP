@@ -355,6 +355,17 @@ public static partial class McpMod
         // scene-tree-driven and equally valid in MP. Route them to the shared handler
         // so MP clients can dismiss blocking FTUE prompts without going through the
         // run-mode-specific dispatcher.
+        if (action == "custom_embark")
+        {
+            try
+            {
+                var cseed = parsed.TryGetValue("seed", out var cseedElem) ? cseedElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteCustomEmbark(cseed)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "screenshot")
         {
             try
@@ -475,6 +486,17 @@ public static partial class McpMod
         string action = actionElem.GetString() ?? "";
 
         // Handle menu actions separately (no run required)
+        if (action == "custom_embark")
+        {
+            try
+            {
+                var cseed = parsed.TryGetValue("seed", out var cseedElem) ? cseedElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteCustomEmbark(cseed)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "screenshot")
         {
             try
