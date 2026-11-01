@@ -98,3 +98,21 @@ public static partial class McpMod
         return new Dictionary<string, object?> { ["status"] = "ok", ["x"] = x, ["y"] = y, ["viewport"] = vp.GetVisibleRect().Size.ToString() };
     }
 }
+
+// Local addition (screenshots): STS2MCP_PLAYER_NAMES="Name1,Name2" renames the Steam-less test players
+// (net id 1 = host, 1000 = first client) wherever the game asks the platform for a player name.
+[HarmonyLib.HarmonyPatch]
+internal static class TestPlayerNames
+{
+    private static System.Reflection.MethodBase? TargetMethod()
+        => HarmonyLib.AccessTools.Method(HarmonyLib.AccessTools.TypeByName("MegaCrit.Sts2.Core.Platform.PlatformUtil"), "GetPlayerNameRaw");
+
+    private static void Postfix(ulong playerId, ref string __result)
+    {
+        var spec = System.Environment.GetEnvironmentVariable("STS2MCP_PLAYER_NAMES");
+        if (string.IsNullOrWhiteSpace(spec)) return;
+        var names = spec.Split(',');
+        int i = playerId == 1 ? 0 : playerId == 1000 ? 1 : playerId == 1001 ? 2 : playerId == 1002 ? 3 : -1;
+        if (i >= 0 && i < names.Length && names[i].Trim().Length > 0) __result = names[i].Trim();
+    }
+}
