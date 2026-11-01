@@ -53,4 +53,16 @@ public static partial class McpMod
         embark.Invoke(screen, new object?[] { null });
         return new Dictionary<string, object?> { ["status"] = "ok", ["seed"] = screen.Lobby.Seed };
     }
+
+    // Presses and releases a key (Godot key name, e.g. "C", "Escape"), for testing hotkeys.
+    private static Dictionary<string, object?> ExecuteKey(string name)
+    {
+        var key = Godot.OS.FindKeycodeFromString(name ?? "");
+        if (key == Godot.Key.None) return Error($"Unknown key '{name}'");
+        Godot.Input.ParseInputEvent(new Godot.InputEventKey { PhysicalKeycode = key, Keycode = key, Pressed = true });
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        tree.CreateTimer(0.2).Timeout += () =>
+            Godot.Input.ParseInputEvent(new Godot.InputEventKey { PhysicalKeycode = key, Keycode = key, Pressed = false });
+        return new Dictionary<string, object?> { ["status"] = "ok", ["key"] = key.ToString() };
+    }
 }
