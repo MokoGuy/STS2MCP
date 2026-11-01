@@ -36,6 +36,10 @@ public static partial class McpMod
 
     private static int LoadPort()
     {
+        // Local addition: STS2MCP_PORT lets two local game instances (FastMP tests) use different ports.
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("STS2MCP_PORT"), out int envPort)
+            && envPort is > 0 and <= 65535)
+            return envPort;
         try
         {
             string? modDir = Path.GetDirectoryName(
@@ -178,13 +182,11 @@ public static partial class McpMod
         {
             var request = context.Request;
             var response = context.Response;
-            response.Headers.Add("Access-Control-Allow-Origin", "*");
-            response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-
-            if (request.HttpMethod == "OPTIONS")
+            // Local hardening: no CORS, and refuse anything a browser sends (it always adds Origin
+            // on cross-origin requests), so web pages can't drive the game.
+            if (request.HttpMethod == "OPTIONS" || !string.IsNullOrEmpty(request.Headers["Origin"]))
             {
-                response.StatusCode = 204;
+                response.StatusCode = 403;
                 response.Close();
                 return;
             }
@@ -353,6 +355,17 @@ public static partial class McpMod
         // scene-tree-driven and equally valid in MP. Route them to the shared handler
         // so MP clients can dismiss blocking FTUE prompts without going through the
         // run-mode-specific dispatcher.
+        if (action == "console")
+        {
+            try
+            {
+                var cmd = parsed.TryGetValue("command", out var cmdElem) ? cmdElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteConsole(cmd)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "menu_select")
         {
             try
@@ -451,6 +464,17 @@ public static partial class McpMod
         string action = actionElem.GetString() ?? "";
 
         // Handle menu actions separately (no run required)
+        if (action == "console")
+        {
+            try
+            {
+                var cmd = parsed.TryGetValue("command", out var cmdElem) ? cmdElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteConsole(cmd)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "menu_select")
         {
             try

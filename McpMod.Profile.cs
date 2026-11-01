@@ -170,6 +170,9 @@ public static partial class McpMod
 
         if (normalizedAction == "delete")
         {
+            return Error("Profile delete is disabled in this local build");
+#pragma warning disable CS0162
+
             if (profileId == sm.CurrentProfileId)
                 return Error("Cannot delete the active profile");
 
@@ -179,6 +182,7 @@ public static partial class McpMod
                 ["status"] = "ok",
                 ["message"] = $"Deleted profile {profileId}"
             };
+#pragma warning restore CS0162
         }
 
         return Error($"Unknown action: {action}. Use: switch, delete");
