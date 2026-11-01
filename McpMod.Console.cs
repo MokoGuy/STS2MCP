@@ -65,4 +65,15 @@ public static partial class McpMod
             Godot.Input.ParseInputEvent(new Godot.InputEventKey { PhysicalKeycode = key, Keycode = key, Pressed = false });
         return new Dictionary<string, object?> { ["status"] = "ok", ["key"] = key.ToString() };
     }
+
+    // Clicks a node found by name anywhere in the scene tree (e.g. a modded button), for UI tests.
+    private static Dictionary<string, object?> ExecuteClickNode(string name)
+    {
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        var node = tree.Root.FindChild(name ?? "", true, false);
+        if (node is not MegaCrit.Sts2.Core.Nodes.GodotExtensions.NClickableControl clickable)
+            return Error($"No clickable node named '{name}'");
+        clickable.ForceClick();
+        return new Dictionary<string, object?> { ["status"] = "ok", ["clicked"] = node.GetPath().ToString() };
+    }
 }

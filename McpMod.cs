@@ -366,6 +366,17 @@ public static partial class McpMod
             return;
         }
 
+        if (action == "click_node")
+        {
+            try
+            {
+                var nname = parsed.TryGetValue("name", out var nElem) ? nElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteClickNode(nname)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "key")
         {
             try
@@ -503,6 +514,17 @@ public static partial class McpMod
             {
                 var cseed = parsed.TryGetValue("seed", out var cseedElem) ? cseedElem.GetString() ?? "" : "";
                 SendJson(response, RunOnMainThread(() => ExecuteCustomEmbark(cseed)).GetAwaiter().GetResult());
+            }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
+        if (action == "click_node")
+        {
+            try
+            {
+                var nname = parsed.TryGetValue("name", out var nElem) ? nElem.GetString() ?? "" : "";
+                SendJson(response, RunOnMainThread(() => ExecuteClickNode(nname)).GetAwaiter().GetResult());
             }
             catch (Exception ex) { SendError(response, 500, ex.Message); }
             return;
