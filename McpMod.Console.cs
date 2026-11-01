@@ -76,4 +76,18 @@ public static partial class McpMod
         clickable.ForceClick();
         return new Dictionary<string, object?> { ["status"] = "ok", ["clicked"] = node.GetPath().ToString() };
     }
+
+    // Left-clicks at a viewport position (x, y in game pixels): moves the cursor there, then presses and
+    // releases the button a few frames apart, for UI that polls the mouse state.
+    private static Dictionary<string, object?> ExecuteMouseClick(float x, float y)
+    {
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        var vp = tree.Root.GetViewport();
+        var pos = new Godot.Vector2(x, y);
+        vp.WarpMouse(pos);
+        Godot.Input.ParseInputEvent(new Godot.InputEventMouseButton { ButtonIndex = Godot.MouseButton.Left, Pressed = true, Position = pos, GlobalPosition = pos });
+        tree.CreateTimer(0.15).Timeout += () =>
+            Godot.Input.ParseInputEvent(new Godot.InputEventMouseButton { ButtonIndex = Godot.MouseButton.Left, Pressed = false, Position = pos, GlobalPosition = pos });
+        return new Dictionary<string, object?> { ["status"] = "ok", ["x"] = x, ["y"] = y, ["viewport"] = vp.GetVisibleRect().Size.ToString() };
+    }
 }
