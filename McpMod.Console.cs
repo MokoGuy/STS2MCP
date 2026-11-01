@@ -47,7 +47,7 @@ public static partial class McpMod
         var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
         var screen = FindFirst<NCustomRunScreen>(tree.Root);
         if (screen == null || screen.Lobby == null) return Error("Custom run screen is not open");
-        screen.Lobby.SetSeed(string.IsNullOrWhiteSpace(seed) ? null : seed.Trim().ToUpperInvariant());
+        if (!string.IsNullOrWhiteSpace(seed)) screen.Lobby.SetSeed(seed.Trim().ToUpperInvariant()); // host only
         var embark = typeof(NCustomRunScreen).GetMethod("OnEmbarkPressed", BindingFlags.Instance | BindingFlags.NonPublic);
         if (embark == null) return Error("OnEmbarkPressed not found (game changed?)");
         embark.Invoke(screen, new object?[] { null });
