@@ -84,6 +84,15 @@ public static partial class McpMod
         return new Dictionary<string, object?> { ["status"] = "ok", ["clicked"] = node.GetPath().ToString() };
     }
 
+    // Local addition: closes the game instance that runs this mod — only test instances have it, so a test
+    // script can never close the player's own game. Quits half a second later, after the response is sent.
+    private static Dictionary<string, object?> ExecuteQuit()
+    {
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        tree.CreateTimer(0.5).Timeout += () => tree.Quit();
+        return new Dictionary<string, object?> { ["status"] = "ok", ["quitting"] = true };
+    }
+
     // Left-clicks at a viewport position (x, y in game pixels): moves the cursor there, then presses and
     // releases the button a few frames apart, for UI that polls the mouse state.
     private static Dictionary<string, object?> ExecuteMouseClick(float x, float y)

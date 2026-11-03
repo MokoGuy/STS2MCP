@@ -378,6 +378,13 @@ public static partial class McpMod
             return;
         }
 
+        if (action == "quit")
+        {
+            try { SendJson(response, RunOnMainThread(ExecuteQuit).GetAwaiter().GetResult()); }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
         if (action == "mouse_click")
         {
             try
@@ -540,6 +547,13 @@ public static partial class McpMod
                 var nname = parsed.TryGetValue("name", out var nElem) ? nElem.GetString() ?? "" : "";
                 SendJson(response, RunOnMainThread(() => ExecuteClickNode(nname)).GetAwaiter().GetResult());
             }
+            catch (Exception ex) { SendError(response, 500, ex.Message); }
+            return;
+        }
+
+        if (action == "quit")
+        {
+            try { SendJson(response, RunOnMainThread(ExecuteQuit).GetAwaiter().GetResult()); }
             catch (Exception ex) { SendError(response, 500, ex.Message); }
             return;
         }
